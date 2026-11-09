@@ -1,0 +1,44 @@
+services:
+  db:
+    image: pgvector/pgvector:pg17
+    environment:
+      POSTGRES_USER: rag
+      POSTGRES_PASSWORD: rag
+      POSTGRES_DB: rag
+    ports: ["5432:5432"]
+    volumes: [pgdata:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U rag"]
+      interval: 5s
+      retries: 10
+
+  ollama:
+    image: ollama/ollama:0.12.6
+    ports: ["11434:11434"]
+    volumes: [ollama:/root/.ollama]
+
+  # One-shot: downloads the chat and embedding models into the ollama volume.
+  models:
+    image: ollama/ollama:0.12.6
+    depends_on: [ollama]
+    environment:
+      OLLAMA_HOST: http://ollama:11434
+    entrypoint: ["sh", "-c", "ollama pull ${CHAT_MODEL:-qwen2.5:3b} && ollama pull ${EMBED_MODEL:-nomic-embed-text}"]
+    volumes: [ollama:/root/.ollama]
+
+  app:
+    build: .
+    depends_on:
+      db: { condition: service_healthy }
+      models: { condition: service_completed_successfully }
+    environment:
+      DATABASE_URL: postgres://rag:rag@db:5432/rag
+      OLLAMA_URL: http://ollama:11434
+      CHAT_MODEL: ${CHAT_MODEL:-qwen2.5:3b}
+      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      API_KEY: ${API_KEY:-}
+    ports: ["3000:3000"]
+
+volumes:
+  pgdata:
+  ollama:
