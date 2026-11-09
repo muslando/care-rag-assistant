@@ -10,7 +10,8 @@
     "ingest:prod": "node dist/ingest.js",
     "mcp": "tsx src/mcp.ts",
     "typecheck": "tsc --noEmit",
-    "test": "vitest run"
+    "test": "vitest run",
+    "eval": "tsx src/eval.ts"
   },
   "keywords": [
     "rag",

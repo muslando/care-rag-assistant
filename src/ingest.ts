@@ -18,6 +18,10 @@ async function listMarkdown(dir: string): Promise<string[]> {
 async function main() {
   const force = process.argv.includes("--force");
   const { llm, store } = createApp();
+  if (process.argv.includes("--reset")) {
+    await store.reset();
+    console.log("Tablolar silindi, baştan oluşturuluyor.");
+  }
   await store.migrate();
 
   const files = await listMarkdown(config.DOCS_DIR);

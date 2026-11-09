@@ -23,6 +23,11 @@ export class PgVectorStore implements VectorStore {
     this.pool = new pg.Pool({ connectionString, max: 5 });
   }
 
+  /** Drops all tables. Needed when switching to an embedding model with a different dimension. */
+  async reset(): Promise<void> {
+    await this.pool.query("DROP TABLE IF EXISTS chunks; DROP TABLE IF EXISTS documents;");
+  }
+
   async migrate(): Promise<void> {
     await this.pool.query(`
       CREATE EXTENSION IF NOT EXISTS vector;
@@ -43,6 +48,17 @@ export class PgVectorStore implements VectorStore {
       CREATE INDEX IF NOT EXISTS chunks_embedding_hnsw
         ON chunks USING hnsw (embedding vector_cosine_ops);
     `);
+
+    // An existing table keeps its old dimension; fail loudly instead of erroring on every insert.
+    const { rows } = await this.pool.query<{ dim: number }>(
+      `SELECT atttypmod AS dim FROM pg_attribute
+        WHERE attrelid = 'chunks'::regclass AND attname = 'embedding'`,
+    );
+    if (rows[0] && rows[0].dim !== this.dim) {
+      throw new Error(
+        `Tablodaki embedding boyutu ${rows[0].dim}, EMBED_DIM ise ${this.dim}. Embedding modeli değiştiyse "npm run ingest -- --reset" çalıştırın.`,
+      );
+    }
   }
 
   async documentChecksum(source: string): Promise<string | null> {
@@ -94,9 +110,9 @@ export class PgVectorStore implements VectorStore {
 
   async search(embedding: number[], topK: number): Promise<SearchHit[]> {
     const { rows } = await this.pool.query<SearchHit>(
-      `SELECT d.source, c.heading, c.content, 1 - (c.embedding <=> $1) AS score
+      `SELECT d.source, c.heading, c.content, 1 - (c.embedding <=> $1::vector) AS score
          FROM chunks c JOIN documents d ON d.id = c.document_id
-        ORDER BY c.embedding <=> $1
+        ORDER BY c.embedding <=> $1::vector
         LIMIT $2`,
       [toVector(embedding), topK],
     );

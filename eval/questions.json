@@ -1,0 +1,22 @@
+[
+  { "q": "Yüksek riskli sakinler gece ne sıklıkla kontrol edilir?", "expect": "Gece Kontrolleri" },
+  { "q": "Bir sakin düşerse ilk ne yapılmalı?", "expect": "Düşme Olduğunda Yapılacaklar" },
+  { "q": "Düşme risk değerlendirmesini kim yapar ve ne sıklıkla?", "expect": "Risk Değerlendirmesi" },
+  { "q": "Gece lambaları hangi saatlerde açık kalır?", "expect": "Ortam Düzenlemesi" },
+  { "q": "Tekrar eden düşmelerde bakım planı nasıl güncellenir?", "expect": "Olay Sonrası İnceleme" },
+  { "q": "Sakin ilacını almak istemezse ne yapılır?", "expect": "Kayıt" },
+  { "q": "Atlanan bir doz fark edilirse personel ne yapmalı?", "expect": "Atlanan veya Hatalı Doz" },
+  { "q": "Buzdolabındaki ilaçların sıcaklığı ne zaman kontrol edilir?", "expect": "İlaç Saklama" },
+  { "q": "İlaç uygulamadan önce hangi kontroller yapılır?", "expect": "Genel Kurallar" },
+  { "q": "Hafta sonu ziyaret saatleri nedir?", "expect": "Ziyaret Saatleri" },
+  { "q": "Bir sakini aynı anda kaç kişi ziyaret edebilir?", "expect": "Ziyaretçi Kaydı" },
+  { "q": "Yakınlarla görüntülü görüşme nasıl ayarlanır?", "expect": "Görüntülü Görüşme" },
+  { "q": "Aylık bakım özeti aileye ne zaman gönderilir?", "expect": "Aileye Bilgilendirme" },
+  { "q": "Şikâyetlere kaç gün içinde dönüş yapılır?", "expect": "Şikâyet ve Öneriler" },
+  { "q": "Vardiya değişiminde ilaçlarla ilgili neler aktarılır?", "expect": "Vardiya Devri" },
+  { "q": "Otoparkın şifresi nedir?", "expect": null },
+  { "q": "Personel maaşları ne zaman yatırılır?", "expect": null },
+  { "q": "Bugün hava nasıl olacak?", "expect": null },
+  { "q": "Python'da liste nasıl sıralanır?", "expect": null },
+  { "q": "Kantinde hangi yemekler var?", "expect": null }
+]

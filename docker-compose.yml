@@ -1,3 +1,8 @@
+# Default: Postgres + app in Docker, Ollama running natively on the host.
+#   (On macOS, Ollama inside Docker cannot use the GPU and is several times slower.)
+# Fully containerized (e.g. Linux server):
+#   OLLAMA_URL=http://ollama:11434 docker compose --profile ollama up -d --build
+
 services:
   db:
     image: pgvector/pgvector:pg17
@@ -13,30 +18,38 @@ services:
       retries: 10
 
   ollama:
-    image: ollama/ollama:0.12.6
+    profiles: [ollama]
+    image: ollama/ollama:0.40.15
     ports: ["11434:11434"]
     volumes: [ollama:/root/.ollama]
 
-  # One-shot: downloads the chat and embedding models into the ollama volume.
+  # One-shot: waits for Ollama, then downloads the chat and embedding models.
   models:
-    image: ollama/ollama:0.12.6
+    profiles: [ollama]
+    image: ollama/ollama:0.40.15
     depends_on: [ollama]
     environment:
       OLLAMA_HOST: http://ollama:11434
-    entrypoint: ["sh", "-c", "ollama pull ${CHAT_MODEL:-qwen2.5:3b} && ollama pull ${EMBED_MODEL:-nomic-embed-text}"]
-    volumes: [ollama:/root/.ollama]
+    entrypoint:
+      - sh
+      - -c
+      - |
+        until ollama list >/dev/null 2>&1; do echo "waiting for ollama..."; sleep 2; done
+        ollama pull ${CHAT_MODEL:-gemma3:4b} && ollama pull ${EMBED_MODEL:-bge-m3}
 
   app:
     build: .
     depends_on:
       db: { condition: service_healthy }
-      models: { condition: service_completed_successfully }
+      models: { condition: service_completed_successfully, required: false }
     environment:
       DATABASE_URL: postgres://rag:rag@db:5432/rag
-      OLLAMA_URL: http://ollama:11434
-      CHAT_MODEL: ${CHAT_MODEL:-qwen2.5:3b}
-      EMBED_MODEL: ${EMBED_MODEL:-nomic-embed-text}
+      OLLAMA_URL: ${OLLAMA_URL:-http://host.docker.internal:11434}
+      CHAT_MODEL: ${CHAT_MODEL:-gemma3:4b}
+      EMBED_MODEL: ${EMBED_MODEL:-bge-m3}
+      EMBED_DIM: ${EMBED_DIM:-1024}
       API_KEY: ${API_KEY:-}
+    extra_hosts: ["host.docker.internal:host-gateway"]
     ports: ["3000:3000"]
 
 volumes:

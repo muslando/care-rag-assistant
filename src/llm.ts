@@ -17,6 +17,15 @@ export class OllamaClient implements LLM {
     private readonly timeoutMs = 120_000,
   ) {}
 
+  /** Returns the configured models that are not yet pulled into Ollama. Throws if Ollama is unreachable. */
+  async missingModels(): Promise<string[]> {
+    const res = await fetch(`${this.baseUrl}/api/tags`, { signal: AbortSignal.timeout(5_000) });
+    if (!res.ok) throw new Error(`Ollama /api/tags failed: ${res.status}`);
+    const { models } = (await res.json()) as { models: { name: string }[] };
+    const have = new Set(models.flatMap((m) => [m.name, m.name.replace(/:latest$/, "")]));
+    return [this.chatModel, this.embedModel].filter((m) => !have.has(m));
+  }
+
   async embed(texts: string[]): Promise<number[][]> {
     const res = await this.post<{ embeddings: number[][] }>("/api/embed", {
       model: this.embedModel,
